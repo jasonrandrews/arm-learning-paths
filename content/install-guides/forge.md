@@ -13,7 +13,7 @@ multitool_install_part: false
 official_docs: https://www.linaroforge.com/documentation/
 test_images:
 - ubuntu:latest
-test_link: null
+test_link: https://github.com/jasonrandrews/arm-learning-paths/actions/runs/7546155247
 test_maintenance: true
 test_status:
 - passed

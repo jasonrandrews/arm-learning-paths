@@ -10,10 +10,10 @@ multitool_install_part: false
 official_docs: https://learn.microsoft.com/en-us/cli/azure
 test_images:
 - ubuntu:latest
-test_link: null
+test_link: https://github.com/jasonrandrews/arm-learning-paths/actions/runs/7546155247
 test_maintenance: true
 test_status:
-- passed
+- failed
 title: Azure CLI
 tool_install: true
 weight: 1

@@ -4,16 +4,15 @@ additional_search_terms:
 - TensorFlow
 - Pytorch
 - linux
-
+author_primary: Jason Andrews
 layout: installtoolsall
 minutes_to_complete: 15
-author_primary: Jason Andrews
 multi_install: false
 multitool_install_part: false
 official_docs: https://docs.anaconda.com/
 test_images:
 - ubuntu:latest
-test_link: null
+test_link: https://github.com/jasonrandrews/arm-learning-paths/actions/runs/7546155247
 test_maintenance: true
 test_status:
 - passed

@@ -6,19 +6,19 @@ additional_search_terms:
 - forge
 - linux
 - cloud
-
+author_primary: Florent Lebeau
 layout: installtoolsall
 minutes_to_complete: 15
-author_primary: Florent Lebeau
 multi_install: false
 multitool_install_part: false
 official_docs: https://gcc.gnu.org/onlinedocs/gfortran/
 test_images:
 - ubuntu:latest
 - fedora:latest
-test_link: null
+test_link: https://github.com/jasonrandrews/arm-learning-paths/actions/runs/7546155247
 test_maintenance: true
 test_status:
+- passed
 - passed
 title: GFortran
 tool_install: true

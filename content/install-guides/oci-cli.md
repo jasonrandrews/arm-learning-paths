@@ -2,17 +2,17 @@
 additional_search_terms:
 - cloud
 - OCI
-- Oracle 
+- Oracle
 - infrastructure
-
+author_primary: Daniel Gubay
 layout: installtoolsall
 minutes_to_complete: 10
-author_primary: Daniel Gubay
 multi_install: false
 multitool_install_part: false
 official_docs: https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/cliinstall.htm
 test_images:
 - ubuntu:latest
+test_link: https://github.com/jasonrandrews/arm-learning-paths/actions/runs/7546155247
 test_maintenance: true
 test_status:
 - passed

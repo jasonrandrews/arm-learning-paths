@@ -14,7 +14,7 @@ official_docs: https://developer.arm.com/documentation/101458/latest
 test_images:
 - ubuntu:latest
 - fedora:latest
-test_link: null
+test_link: https://github.com/jasonrandrews/arm-learning-paths/actions/runs/7546155247
 test_maintenance: true
 test_status:
 - passed

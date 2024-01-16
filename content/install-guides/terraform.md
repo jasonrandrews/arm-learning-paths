@@ -4,17 +4,15 @@ additional_search_terms:
 - vm
 - virtual machine
 - deploy
-
-
+author_primary: Jason Andrews
 layout: installtoolsall
 minutes_to_complete: 30
-author_primary: Jason Andrews
 multi_install: false
 multitool_install_part: false
 official_docs: https://developer.hashicorp.com/terraform/docs
 test_images:
 - ubuntu:latest
-test_link: false
+test_link: https://github.com/jasonrandrews/arm-learning-paths/actions/runs/7546155247
 test_maintenance: true
 test_status:
 - passed
