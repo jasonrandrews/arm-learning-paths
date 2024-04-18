@@ -1,24 +1,30 @@
 ---
-title: "Setup an example application" 
+title: "Setup the tools and an example application" 
 weight: 3
 layout: "learningpathall"
 ---
 
-## Linux setup
+You should have an Arm Linux computer with Perf installed, and you should be able to [SSH](/install-guides/ssh/) to the computer. You will use SSH to copy the required tools and example code from you local computer to the Arm Linux computer. 
 
-You should have an Arm Linux computer with Perf installed, and you should be able to SSH to the computer.
+## Copy the required tools
 
-## Copy tools
+To get ready for function attributed metrics, copy the Gator daemon to your Arm Linux computer. 
 
-Copy the Gator daemon to your Arm Linux computer. There are multiple Gator daemons in the Performance Studio installtion, use the `arm64` version.
+There are multiple Gator daemons in the Performance Studio installation, use the `arm64` version.
+
+Replace `installation-dir` with the location of your Performance Studio installation. For example, the default location on macOS is `/Applications/Arm_Performance_Studio_2024.0`. 
+
+Substitute your user name and the IP address of the Arm Linux computer. 
+
+Use `ssh` to copy the `gatord` executable (with your substitutions):
 
 ```console
 scp <installation-dir>/Arm_Performance_Studio_2024.0/streamline/bin/linux/arm64/gatord <user>@<remote-ip-address>:~/
 ```
 
-Copy the tools for function specific metrics from your local Arm Performance Studio installation to the Arm Linux computer. 
+Next, copy the tools for function attributed metrics from your local Performance Studio installation to the Arm Linux computer. 
 
-Arm_Performance_Studio_2024.0/streamline/prototypes/utils to the Arm Linux target machine.
+The tools are located in `/Applications/Arm_Performance_Studio_2024.0/streamline/prototypes/utils` and remember to substitute your user name and IP address:
 
 ```console
 scp -r <installation-dir>/Arm_Performance_Studio_2024.0/streamline/utils <user>@<remote-ip-address>:~/
@@ -26,9 +32,17 @@ scp -r <installation-dir>/Arm_Performance_Studio_2024.0/streamline/utils <user>@
 
 You should now have `gatord` and the `utils` directory in the home directory of the Arm Linux computer. 
 
-## Cache example
+{{% notice Note %}}
+This is a prototype feature of Arm Performance Studio which may change in the future. 
+{{% /notice %}}
 
-Copy the example application from your local Arm Performance Studio instalation to the Arm Linux computer:
+## Cache example code
+
+You can use an example application from the Performance Studio installation to learn how to collect function attributed metrics.
+
+The example is called `Streamline_cache_test`. 
+
+Copy the example application from your local Performance Studio installation to the Arm Linux computer:
 
 ```console
 scp -r <installation-dir>/Arm_Performance_Studio_2024.0/streamline/examples/linux/Streamline_cache_test  <user>@<remote-ip-address>:~/
@@ -36,11 +50,13 @@ scp -r <installation-dir>/Arm_Performance_Studio_2024.0/streamline/examples/linu
 
 You now have the `Streamline_cache_test` directory in the home directory of the Arm Linux computer. 
 
-The C code for the example you just copied is below. 
+The C code for the example is below. 
 
 Study the 2 functions, `xy_loop()` and `yx_loop()`. 
 
-Each function provides the same behavior, but loops through the allocated data arrays in different order. This results in different cache characteristics.
+Each function provides the same behavior, but loops through the allocated data arrays in different order. You will notice the inner and outer loops are reversed in the functions.
+
+This results in different cache characteristics, and you can use function attributed metrics to compare the impact.
 
 ```C
 /*
@@ -179,7 +195,15 @@ int main (int argc, char* argv[])
 
 ```
 
+SSH to the Arm Linux computer. You should know be at the `$HOME` directory on the Arm Linux computer.
+
 ## Build and the example
+
+Change to the example application:
+
+``` bash
+cd Streamline_cache_test
+```
 
 Compile the example using the GNU compiler:
 
@@ -205,4 +229,4 @@ col-major ordering: took 129.71 ms (1.5x slower)
 
 Depending on your computer, the time values may be different from the output above.
 
-You see the second implementation is slower than the first one. 
+Notice the second implementation (`yx_loop()`) is significantly slower than the first one (`xy_loop()`). 

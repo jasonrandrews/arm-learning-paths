@@ -1,5 +1,5 @@
 ---
-title: Use Streamline to collect per function performance metrics
+title: Collect per function performance metrics with Arm Performance Studio
 
 minutes_to_complete: 90
 
@@ -8,10 +8,10 @@ who_is_this_for: This is an advanced topic for software developers who want anal
 learning_objectives:
     - Understand different sampling methods used in Linux application profiling 
     - Use Perf for periodic and event-based sampling
-    - Use Streamline from the Linux command line to collect function specific performance metrics
+    - Use Arm Performance Studio from the Linux command line to collect function specific performance metrics
     
 prerequisites:
-    - An Arm computer running Linux. A bare metal or cloud metal instance can be used. You can use a virtual machine (VM), but fewer counters may be available.
+    - An Arm computer running Linux. A [cloud instance](/learning-paths/servers-and-cloud-computing/intro/find-hardware/) or a virtual machine can be used. Depending on the type of virtualization, fewer counters may be available.
 
 author_primary: Jason Andrews
 
