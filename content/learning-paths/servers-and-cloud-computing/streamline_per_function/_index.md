@@ -3,7 +3,7 @@ title: Collect per function performance metrics with Arm Performance Studio
 
 minutes_to_complete: 60
 
-who_is_this_for: This is an advanced topic for software developers who want analyze performance of a Linux application and collect hardware events for individual functions.
+who_is_this_for: This is an advanced topic for software developers who want to analyze performance of a Linux application and collect hardware events for individual functions.
 
 learning_objectives:
     - Understand different sampling methods used in Linux application profiling 

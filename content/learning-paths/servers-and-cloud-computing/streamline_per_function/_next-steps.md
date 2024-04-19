@@ -25,6 +25,10 @@ further_reading:
         title: Perf
         link: https://en.wikipedia.org/wiki/Perf_%28Linux%29
         type: documentation
+    - resource:
+        title: Arm Performance Studio Release Note
+        link: https://developer.arm.com/documentation/107649/latest/
+        type: documentation
 
 # ================================================================================
 #       FIXED, DO NOT MODIFY

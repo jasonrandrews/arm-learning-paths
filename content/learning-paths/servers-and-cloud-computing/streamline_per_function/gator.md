@@ -4,11 +4,11 @@ weight: 5
 layout: "learningpathall"
 ---
 
-Use gator and analyze_capture to get per function metrics.
+You can use Gator to collect traces and `analyze_capture` to obtain per function metrics.
 
 ## Collect function attributed metrics
 
-Function attributed metrics combine the sample-based profiling and the event-based profiling so you can see the number of cache misses in the function. o
+Function attributed metrics combine sample-based profiling and event-based profiling so you can see the number of cache misses in the function.
 
 Instead of Perf, the Gator daemon is used to collect the data. 
 
@@ -58,9 +58,9 @@ e,symbol,inlined from
 
 The values are in scientific notation.
 
-You can open the file using a spreadsheet program. Below is a screenshot of LibreOffice Calc.
+You can open the file using a spreadsheet program. Below is a screenshot of the same CSV file in LibreOffice Calc.
 
-put the picture here. 
+![img1 #center](metrics.png)
 
 You can also write simple scripts to process the CSV files.
 
@@ -129,4 +129,12 @@ Function:  __GI___futex_abstimed_wait_cancelable64
 	 L1D data ratio    :  17.4      
 ```
 
+You will see the significant increase in cache refills for `yx_loop()` compared to `xy_loop()`.
+
 Function attributed metrics are useful because they provide hardware metrics for each function. This makes it easier to understand if a function is utilizing the hardware well or there may be opportunities for improvement. 
+
+There is more information about function attributed metrics in the Arm Performance Studio release. Review the file `Arm_Performance_Studio_2024.0/streamline/prototypes/utils/README.md`
+
+There is also a tool to convert CSV files into XLSX files for Excel. Refer to the file `Arm_Performance_Studio_2024.0/streamline/prototypes/utils/reportformatter/README.md` 
+
+
