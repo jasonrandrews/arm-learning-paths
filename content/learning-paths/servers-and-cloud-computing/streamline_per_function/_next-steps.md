@@ -7,7 +7,7 @@ next_step_guidance: >
     Learn about migrating applications to Arm
 # 1-3 sentence recommendation outlining how the reader can generally keep learning about these topics, and a specific explanation of why the next step is being recommended.
 
-recommended_path: "/learning-paths/servers-and-cloud-computing/migration/"
+recommended_path: "/learning-paths/servers-and-cloud-computing/arm_pmu/"
 # Link to the next learning path being recommended.
 
 
@@ -18,13 +18,9 @@ recommended_path: "/learning-paths/servers-and-cloud-computing/migration/"
 
 further_reading:
     - resource:
-        title: Linux perf_events documentation
-        link: https://www.man7.org/linux/man-pages/man2/perf_event_open.2.html
-        type: documentation
-    - resource:
-        title: PAPI documentation
-        link: https://github.com/icl-utk-edu/papi/wiki
-        type: documentation
+        title: Using Streamline to Guide Cache Optimization
+        link: https://community.arm.com/arm-community-blogs/b/tools-software-ides-blog/posts/using-streamline-to-guide-cache-optimization
+        type: blog
     - resource:
         title: Perf
         link: https://en.wikipedia.org/wiki/Perf_%28Linux%29

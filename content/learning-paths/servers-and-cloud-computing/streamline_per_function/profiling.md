@@ -10,7 +10,13 @@ You need Arm Performance Studio installed to access the required tools and examp
 
 On your Arm Linux computer you need to instal Linux Perf and the GNU compiler. Use the [Perf for Linux on Arm](/install-guides/perf/) install guide and the [GNU Compiler](/install-guides/gcc/native/) install guide to install each tool. 
 
-If you have Arm Performance Studio on your local computer and Linux Perf on the remote Arm Linux computer you are ready to begin.
+For Ubuntu 22.04 you can install everything you need with: 
+
+```console
+sudo apt install gcc make linux-tools-generic linux-tools-$(uname -r) -y
+```
+
+If you have Arm Performance Studio on your local computer and Linux Perf and the tools to compile an example on the remote Arm Linux computer you are ready to begin.
 
 ## Periodic and event-based profiling 
 

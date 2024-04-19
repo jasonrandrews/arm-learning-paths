@@ -27,7 +27,7 @@ Next, copy the tools for function attributed metrics from your local Performance
 The tools are located in `/Applications/Arm_Performance_Studio_2024.0/streamline/prototypes/utils` and remember to substitute your user name and IP address:
 
 ```console
-scp -r <installation-dir>/Arm_Performance_Studio_2024.0/streamline/utils <user>@<remote-ip-address>:~/
+scp -r <installation-dir>/Arm_Performance_Studio_2024.0/streamline/prototypes/utils <user>@<remote-ip-address>:~/
 ```
 
 You should now have `gatord` and the `utils` directory in the home directory of the Arm Linux computer. 
@@ -223,8 +223,8 @@ The output will be similar to:
  streamline_annotate.c/gator_func:548 [ERROR] Warning : Not connected to gatord, the application will run normally but Streamline will not collect annotations. To collect annotations, please verify you are running gatord 5.24 or later and that SELinux is disabled.
  
 Starting loop addition with 5000 iterations...
-row-major ordering: took 85.08 ms
-col-major ordering: took 129.71 ms (1.5x slower)
+row-major ordering: took 48.18 ms
+col-major ordering: took 129.11 ms (2.7x slower)
 ```
 
 Depending on your computer, the time values may be different from the output above.

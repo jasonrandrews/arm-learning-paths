@@ -13,36 +13,25 @@
 review:
     - questions:
         question: >
-            The performance monitoring unit (PMU) can be accessed from user space by default.
+            Periodic sampling and event-based sampling are two common methods used to profile applications.
         answers:
             - "True"
             - "False"
-        correct_answer: 2
+        correct_answer: 1
         explanation: >
-            The register pmuserenr_el0 must be written to by EL1 (kernel) software before user space can access all the PMU system registers for configuring event counting.
+            Most application profiling tools use time-based or event-based methods to collect program information. 
 
     - questions:
         question: >
-            Which of the following is not an option for accessing HW counters
+            Which profiling technique was recently introduced into a prototype for Arm Performance Studio?
         answers:
-            - "PAPI"
-            - "Assembly"
-            - "Linux perf_events"
-            - "top"
+            - "periodic sampling"
+            - "PMU recording"
+            - "statistical sampling"
+            - "function attributed metrics"
         correct_answer: 4                  
         explanation: >
-            Top is a tool that reports CPU utilization at the process level.
-               
-    - questions:
-        question: >
-            CPUs typically support a limited number of event counters.
-        answers:
-            - "True"
-            - "False"
-        correct_answer: 1                    
-        explanation: >
-            Because counters take up area on a die, the number of counters supported is usually limited to 4-8.
-
+            Function attributed metrics are a prototype feature of Arm Performance Studio.
 
 
 
