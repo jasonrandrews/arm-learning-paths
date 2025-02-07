@@ -1,0 +1,32 @@
+name: actions-test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check-external-links:
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: 0.130.0
+          extended: true
+          
+      - name: Clear npm cache
+        run: npm cache clean --force
+          
+      - name: Install Post-CSS
+        run: npm install postcss-cli
+
+      - name: Build
+        run: |
+          hugo --minify
+          cp learn-image-sitemap.xml public/learn-image-sitemap.xml
+          bin/pagefind.aarch64 --site "public"
