@@ -11,9 +11,14 @@ layout: learningpathall
 To create a NEON version enter the prompt:
 
 ```console
-Add a new implementation of adler32 checksum function that uses Arm NEON intrinsics and write it in a file adler32-neon.c
-Update main.c to call both the original adler32 and the NEON version to compare performance. 
-Also update the Makefile.
+Add a second implementation of adler32 that processes data in blocks to avoid too frequent modulo operations and create it in adler32-block.c 
+For inputs less than 16 bytes use a standard implementation. 
+Update the Makefile and other files to add this new version and compare performance. Print out the speedup from the block version.
+```
+
+```console
+Add a third implementation of adler32 checksum function that uses Arm NEON intrinsics and write it in a file adler32-neon.c
+Update the Makefile and other files to run all 3 versions and compare performance. 
 ```
 
 The output is:

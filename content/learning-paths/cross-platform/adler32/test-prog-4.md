@@ -16,6 +16,7 @@ Add code around the adler32 calls to measure the performance of the adler32 chec
 Generate a simple test to make sure the adler32 generates the expected checksum. 
 Add randomly generated test data of various sizes: 1 kb, 10 kb, 100 kb, 1 mb, and 10 mb. 
 Add code to run all test data with different sizes and measure performance.
+Don't create the Makefile yet.
 ```
 
 The output is below:
