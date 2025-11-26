@@ -11,7 +11,7 @@ In this step, you will implement the main RTOS thread (`app_main`), which is pri
 
 You will create three threads. The number and naming of the threads are flexible, so feel free to adjust as needed.
 
-## Create `app_main`
+## Create app_main
 
 Click on the `+` icon within the `Source Files` Group, and add a new file `app_main.c`. Populate with the below.
 

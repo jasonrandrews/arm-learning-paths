@@ -417,7 +417,7 @@ resource "google_compute_firewall" "private_allow_all_network_inbound" {
   }
 }
 
-# private-persistence - allow ingress from `private` and `private-persistence` instances in this network
+# private-persistence - allow ingress from private and private-persistence instances in this network
 resource "google_compute_firewall" "private_allow_restricted_network_inbound" {
   name        = "bastion-allow-restricted-inbound"
   project     = var.project

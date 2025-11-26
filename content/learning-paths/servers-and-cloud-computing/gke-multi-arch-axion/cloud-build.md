@@ -141,7 +141,7 @@ cat > cloudbuild.yaml <<'YAML'
 # USAGE:
 # GCP zone and GKE target cluster must be specified as substitutions
 # Example invocation:
-# `gcloud builds submit --config=cloudbuild.yaml --substitutions=_ZONE=us-central1-b,_CLUSTER=demo-app-staging .`
+# gcloud builds submit --config=cloudbuild.yaml --substitutions=_ZONE=us-central1-b,_CLUSTER=demo-app-staging .
 
 substitutions:
   _REGION: ${REGION}
