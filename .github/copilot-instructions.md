@@ -56,11 +56,11 @@ Front Matter (YAML format):
 - `minutes_to_complete`: Realistic time estimate for completion
 - `prerequisites`: List of required knowledge, tools, or prior learning paths
 - `author`: Main contributor's name, multiple authors can be listed separated using - on new lines
-- `subjects`: Technology categories for filtering and search, this is a closed list and must match one of the subjects listed on https://learn.arm.com/learning-paths/cross-platform/_example-learning-path/write-2-metadata/
+- `subjects`: Technology categories for filtering and search, this is a closed list and must match one of the subjects listed on /learning-paths/cross-platform/_example-learning-path/write-2-metadata/
 - `armips`: Relevant Arm IP, stick to Neoverse, Cortex-A, Cortex-M, etc. Don't list specific CPU models or Arm architecture versions
 - `tools_software_languages`: Open category listing Programming languages, frameworks, and development tools used
 - `skilllevels`: Skill levels allowed are only Introductory and Advanced
-- `operatingsystems`: Operating systems used, must match the closed list on https://learn.arm.com/learning-paths/cross-platform/_example-learning-path/write-2-metadata/
+- `operatingsystems`: Operating systems used, must match the closed list on /learning-paths/cross-platform/_example-learning-path/write-2-metadata/
 
 ### Further reading curation
 
