@@ -22,7 +22,7 @@ To add a new Learning Path, first decide the appropriate category. There are 6 c
 Place your Learning Path in the category closest to the environment where the software runs. The tags on the [front page of the website](/) help explain the categories. Feel free to ask on GitHub if you are unsure which category best matches your Learning Path. 
 {{% /notice %}}
 
-You can also add a new install guide. Install guides are short descriptions providing commonly used information to install tools and software. Install guides are easy to reference from multiple Learning Paths and avoid repetition. Upcoming section will provide details to create a new install guide. Refer to the [existing install guides](https://learn.arm.com/install-guides) to see what is available.
+You can also add a new install guide. Install guides are short descriptions providing commonly used information to install tools and software. Install guides are easy to reference from multiple Learning Paths and avoid repetition. Upcoming section will provide details to create a new install guide. Refer to the [existing install guides](/install-guides) to see what is available.
 
 ### Create a new Learning Path
 
