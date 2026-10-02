@@ -1,5 +1,8 @@
 /public
-/static/
+/static/*
+!/static/apps/
+/static/apps/*
+!/static/apps/sme-visualisations/
 __pycache__/
 resources/
 node_modules/
