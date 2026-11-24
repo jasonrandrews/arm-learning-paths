@@ -1,6 +1,6 @@
 ---
-title: Serve Gemma 4 with a 64K context window
-description: Launch llama-server on Arm64 Linux with a 64K context window, Flash Attention, quantized KV cache, and Jinja chat templates, then validate the OpenAI-compatible API.
+title: Serve Gemma 4 E4B with a 64K context window
+description: Launch llama-server with Gemma 4 E4B, a 64K context window, Flash Attention, and a quantized KV cache, then validate the OpenAI-compatible API.
 weight: 5
 
 ### FIXED, DO NOT MODIFY
@@ -9,18 +9,21 @@ layout: learningpathall
 
 ## Configure llama-server for Hermes Agent
 
-Hermes Agent communicates with local models over an OpenAI-compatible HTTP API (`/v1/chat/completions`) and requires a minimum **64K context window** (`-c 65536`) to accommodate tool definitions, workspace context, and multi-turn execution traces.
+Hermes Agent communicates with local models over an OpenAI-compatible HTTP API (`/v1/chat/completions`) and needs a minimum 64K context window (`-c 65536`) to accommodate tool definitions, workspace context, and multi-turn execution traces.
 
-Start `llama-server` with `gemma-4-E4B-it-Q4_0.gguf` using the thread count that performed best in your `llama-bench` run (or `$(nproc)` on 8–16 core systems; `32` is shown below as an example):
+Start `llama-server` with `gemma-4-E4B-it-Q4_0.gguf`. Set `GEN_THREADS` (`-t`) to the thread count that gave the highest `tg128` speed in your `llama-bench` run, and set `BATCH_THREADS` (`-tb`) to the thread count that gave the highest `pp512` speed (often up to `$(nproc)` within a single NUMA node) to speed up Hermes Agent's ~11K-token initial prompt prefill:
 
 ```bash
+GEN_THREADS=8    # Replace with your best tg128 thread count from llama-bench
+BATCH_THREADS=$(nproc)
+
 ./build/bin/llama-server \
   -m ./models/gemma-4-E4B-it-Q4_0.gguf \
   --host 127.0.0.1 \
   --port 8080 \
   -c 65536 \
-  -t $(nproc) \
-  -tb $(nproc) \
+  -t "$GEN_THREADS" \
+  -tb "$BATCH_THREADS" \
   -np 1 \
   --jinja \
   -fa on \
@@ -28,21 +31,26 @@ Start `llama-server` with `gemma-4-E4B-it-Q4_0.gguf` using the thread count that
   --cache-type-v q8_0
 ```
 
+{{% notice Tip %}}
+On 32–64+ core Arm64 systems, token generation (`-t`) typically peaks at 50–75% of physical cores in a single NUMA node (for example, 16–32 on a 64-core system), while prompt processing (`-tb`) can use more cores. On heterogeneous Arm64 laptops or desktops (big.LITTLE), set `-t` to the number of performance cores so generation threads don't stall on efficiency cores.
+{{% /notice %}}
+
 ### Understanding the server flags
 
 Each flag is tuned for single-user autonomous agent reliability on an Arm64 Linux system:
 
 | Flag | Purpose |
 |---|---|
-| `--host 127.0.0.1 --port 8080` | Binds the OpenAI-compatible server locally on port `8080` |
+| `--host 127.0.0.1 --port 8080` | Binds the OpenAI-compatible server locally on port 8080 |
 | `-c 65536` | Allocates a 64K token context window, meeting Hermes Agent's minimum context requirement |
-| `-t $(nproc) -tb $(nproc)` | Sets generation (`-t`) and prompt-processing batch (`-tb`) thread counts (cap at your optimal `llama-bench` count on high-core-count servers) |
+| `-t "$GEN_THREADS"` | Sets token-generation threads; tune from `llama-bench` `tg128` results rather than using all cores on high-core or big.LITTLE systems |
+| `-tb "$BATCH_THREADS"` | Sets prompt-processing batch threads; scales well with higher core counts for faster long-context prefill |
 | `-np 1` | Reserves the full 64K context for a single parallel slot rather than splitting memory across slots |
-| `--jinja` | Enables Jinja chat template rendering required for Gemma 4 structured tool calling |
+| `--jinja` | Enables Jinja chat template rendering needed for Gemma 4 E4B structured tool calling |
 | `-fa on` | Enables Flash Attention to reduce memory overhead and improve long-context performance |
-| `--cache-type-k q8_0 --cache-type-v q8_0` | Quantizes the 64K K and V caches to 8-bit so weights and context fit comfortably in 64 GB RAM |
+| `--cache-type-k q8_0 --cache-type-v q8_0` | Quantizes the 64K K and V caches to 8-bit so weights and context fit comfortably in 16 GB or more of RAM |
 
-The startup output begins with:
+The output is similar to:
 
 ```output
 0.00.002.121 I srv  llama_server: initializing ...
@@ -148,7 +156,7 @@ The output is similar to:
 }
 ```
 
-Confirm that the JSON response contains a valid `choices[0].message.content` reply and `usage` token counts. Note the exact `id` reported by `/v1/models`—you will use it when configuring Hermes Agent in the next step.
+Confirm that the JSON response contains a valid `choices[0].message.content` reply and `usage` token counts. Note the exact `id` reported by `/v1/models`. You'll use it when configuring Hermes Agent in the next step.
 
 ## What you've accomplished and what's next
 

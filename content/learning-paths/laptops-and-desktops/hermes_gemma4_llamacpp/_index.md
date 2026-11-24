@@ -1,21 +1,25 @@
 ---
 title: Run Hermes Agent locally with Gemma 4 and llama.cpp on Arm64 Linux
 
+draft: true
+cascade:
+    draft: true
+
 description: Build llama.cpp on Arm64 Linux, serve Gemma 4 E4B locally, and connect Hermes Agent to fix code and run CLI tasks without cloud APIs.
 
 minutes_to_complete: 45
 
-who_is_this_for: This is an advanced topic for developers who want to run an autonomous AI agent locally on Arm64 Linux workstations, using llama.cpp and Gemma 4 E4B to diagnose and fix code without cloud API dependencies.
+who_is_this_for: This is an advanced topic for developers who want to run an autonomous AI agent locally on Arm64 Linux systems, using llama.cpp and Gemma 4 E4B to diagnose and fix code without cloud API dependencies.
 
 learning_objectives:
-    - Compile llama.cpp natively on an Arm64 Linux workstation with CPU optimizations.
-    - Benchmark Gemma 4 E4B against Gemma 4 26B-A4B (MoE) and 31B (Dense) on memory-bandwidth-bound Arm64 CPUs.
+    - Compile llama.cpp from source on an Arm64 Linux system with CPU optimizations.
+    - Download Gemma 4 E4B from Hugging Face and benchmark its CPU performance on Arm64 Linux.
     - Serve Gemma 4 E4B with a 64K context window and quantized KV cache using llama-server.
     - Configure Nous Research Hermes Agent to use a local OpenAI-compatible endpoint and validate autonomous code-fixing workflows.
 
 prerequisites:
-    - An Arm64 Linux system running Ubuntu or Debian `aarch64` with at least 16 GB RAM (64 GB if also benchmarking the 26B-A4B and 31B models)
-    - At least 15 GB of free disk space for building llama.cpp and storing Gemma 4 E4B (40 GB if downloading all three models)
+    - An Arm64 Linux system running Ubuntu or Debian with at least 16 GB RAM
+    - At least 15 GB of free disk space for building llama.cpp and storing Gemma 4 E4B
     - Familiarity with the Linux command line, CMake builds, and basic LLM inference concepts
 
 author: Jason Andrews

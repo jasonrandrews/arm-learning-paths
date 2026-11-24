@@ -1,6 +1,6 @@
 ---
-title: Build llama.cpp natively for Arm64
-description: Verify your Arm64 Linux workstation environment, install build dependencies, and compile llama.cpp natively with Arm64 CPU optimizations.
+title: Build llama.cpp from source for Arm64
+description: Verify your Arm64 Linux environment, install build dependencies, and compile llama.cpp from source with Arm64 CPU optimizations.
 weight: 3
 
 ### FIXED, DO NOT MODIFY
@@ -9,7 +9,7 @@ layout: learningpathall
 
 ## Verify your Arm64 environment
 
-Before compiling `llama.cpp`, confirm your CPU architecture, core count, and available memory.
+Before compiling llama.cpp, confirm your CPU architecture, core count, and available memory.
 
 Check the CPU architecture and core topology:
 
@@ -26,7 +26,7 @@ Check available system memory:
 free -h
 ```
 
-Confirm that your system has at least `16 GiB` of available RAM for Gemma 4 E4B (or `64 GiB` if you also plan to benchmark the larger 26B-A4B and 31B models).
+Confirm that your system has at least 16 GiB of available RAM for Gemma 4 E4B.
 
 ## Install build prerequisites
 
@@ -39,7 +39,7 @@ sudo apt install -y build-essential cmake git libcurl4-openssl-dev python3-venv 
 
 ## Clone and build llama.cpp
 
-Create a dedicated project directory and clone the official `llama.cpp` repository:
+Create a dedicated project directory and clone the official llama.cpp repository:
 
 ```bash
 mkdir -p ~/hermes-gemma4 && cd ~/hermes-gemma4
@@ -47,13 +47,13 @@ git clone https://github.com/ggml-org/llama.cpp.git
 cd llama.cpp
 ```
 
-Configure the CMake build using `-DGGML_NATIVE=ON` so the compiler enables native Arm64 SIMD instructions (such as NEON and dot-product extensions supported by your CPU), `-DGGML_OPENMP=ON` for multi-threaded CPU execution, and `-DGGML_CPU_KLEIDIAI=ON` to enable Arm KleidiAI optimized microkernels where supported:
+Configure the CMake build with Arm64 CPU optimizations. Pass `-DGGML_NATIVE=ON` to enable Arm64 SIMD instructions (such as NEON and dot-product extensions supported by your CPU), `-DGGML_OPENMP=ON` for multi-threaded execution, and `-DGGML_CPU_KLEIDIAI=ON` to enable Arm KleidiAI microkernels where supported:
 
 ```bash
 cmake -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON -DGGML_OPENMP=ON -DGGML_CPU_KLEIDIAI=ON
 ```
 
-Compile `llama.cpp` across all available cores:
+Compile llama.cpp across all available cores:
 
 ```bash
 cmake --build build --config Release -j $(nproc)
@@ -95,10 +95,10 @@ test parameters:
   -m, --model <filename>                            (default: models/7B/ggml-model-q4_0.gguf)
 ```
 
-If both commands print without errors, your native Arm64 `llama.cpp` binaries are ready.
+If both commands print without errors, your Arm64 llama.cpp binaries are ready.
 
 ## What you've accomplished and what's next
 
-You've verified your Arm64 Linux workstation, installed the required build tools, and compiled `llama.cpp` natively from source.
+You've verified your Arm64 Linux system, installed the required build tools, and compiled llama.cpp from source.
 
-Next, you'll download the Gemma 4 26B-A4B (MoE) and Gemma 4 31B (Dense) GGUF models and benchmark them across different CPU thread counts.
+Next, you'll download the Gemma 4 E4B GGUF model from Hugging Face and benchmark it with `llama-bench` to confirm it works on your Arm64 CPU.

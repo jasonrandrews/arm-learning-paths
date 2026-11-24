@@ -16,7 +16,7 @@ mkdir -p ~/hermes-test-workspace
 cd ~/hermes-test-workspace
 ```
 
-Create `metrics_parser.py` with an intentional off-by-one / key-name bug:
+Create `metrics_parser.py` with an intentional off-by-one and key-name bug:
 
 ```bash
 cat <<'EOF' > ~/hermes-test-workspace/metrics_parser.py
@@ -38,8 +38,10 @@ EOF
 Running it directly reveals both bugs (`KeyError: 'latency'` and a division by `len(records) - 1` that fails on single-item lists and skews averages):
 
 ```bash
-python3 ~/hermes-test-workspace/metrics_parser.py
+python3 metrics_parser.py
 ```
+
+The output is similar to:
 
 ```output
 Traceback (most recent call last):
@@ -57,16 +59,18 @@ KeyError: 'latency'
 
 ## Run the multi-step agent prompt
 
-Run Hermes Agent inside `~/hermes-test-workspace` with **Gemma 4 E4B** active on `llama-server` (you can run interactively with `hermes` or pass the prompt directly with `hermes chat --cli`):
+Run Hermes Agent inside `~/hermes-test-workspace` with Gemma 4 E4B active on `llama-server` (you can run interactively with `hermes` or pass the prompt directly with `hermes chat --cli`):
 
 ```bash
-cd ~/hermes-test-workspace
 hermes chat --cli -q "Inspect the current directory, read metrics_parser.py, diagnose any bugs, fix metrics_parser.py, and run python3 metrics_parser.py to verify the output." --oneshot
 ```
 
-> **Note:** On the very first turn of a new session, Hermes Agent sends its ~11K-token system prompt and tool schemas, which takes ~1–1.5 minutes to prefill on CPU with Gemma 4 E4B. Subsequent tool-calling turns and follow-up prompts reuse the `llama-server` KV cache and complete quickly.
+{{% notice Note %}}
+On the first turn of a new session, Hermes Agent sends an ~11K-token system prompt and tool schemas, which takes ~1–1.5 minutes to prefill on CPU with Gemma 4 E4B. Subsequent tool-calling turns and follow-up prompts reuse the `llama-server` KV cache and complete quickly.
+{{% /notice %}}
 
-Observe how the agent executes the full tool loop:
+Observe how the agent runs the full tool loop:
+
 1. Finds and reads `metrics_parser.py`.
 2. Patches the `len(records) - 1` divisor bug and runs `python3 metrics_parser.py`.
 3. Sees the `KeyError: 'latency'` failure, self-corrects `r["latency"]` to `r["latency_ms"]`, and re-runs `python3 metrics_parser.py`.
@@ -122,11 +126,11 @@ In a separate terminal while `llama-server` and Hermes Agent are running, check 
 free -h
 ```
 
-With Gemma 4 E4B, the 64K context window, and `q8_0` KV cache active, total system RAM usage is typically around `12 GiB` (`0 B` swap), fitting comfortably on 16 GB+ Arm64 systems.
+With Gemma 4 E4B, the 64K context window, and `q8_0` KV cache active, total system RAM usage is typically around 12 GiB (0 B swap), fitting comfortably on Arm64 systems with 16 GB or more of RAM.
 
 ## Summary of observed agentic performance
 
-The table below summarizes the observed run for Gemma 4 E4B on the debugging task:
+The following table summarizes the observed run for Gemma 4 E4B on the debugging task:
 
 | Metric | Gemma 4 E4B (`Q4_0`) |
 |---|---|
@@ -139,13 +143,13 @@ The table below summarizes the observed run for Gemma 4 E4B on the debugging tas
 
 You built a completely local autonomous AI agent stack on Arm64 Linux without relying on cloud APIs:
 
-- Compiled `llama.cpp` natively for Arm64 (`-DGGML_NATIVE=ON -DGGML_OPENMP=ON -DGGML_CPU_KLEIDIAI=ON`).
-- Benchmarked **Gemma 4 E4B** (`219.17 tok/s` prompt processing, `18.45 tok/s` generation) alongside **Gemma 4 26B-A4B (MoE)** and **Gemma 4 31B (Dense)**.
-- Served Gemma 4 E4B with a **64K context window**, Flash Attention, `q8_0` KV cache, and `--jinja` tool-calling templates in just `12 GiB` total system RAM.
-- Connected **Nous Research Hermes Agent** to `http://127.0.0.1:8080/v1` and verified end-to-end autonomous bug diagnosis, patching, and verification.
+- Compiled llama.cpp from source for Arm64 (`-DGGML_NATIVE=ON -DGGML_OPENMP=ON -DGGML_CPU_KLEIDIAI=ON`).
+- Downloaded Gemma 4 E4B from Hugging Face and benchmarked its prompt-processing and token-generation speed on Arm64.
+- Served Gemma 4 E4B with a 64K context window, Flash Attention, `q8_0` KV cache, and `--jinja` tool-calling templates in about 12 GiB of total system RAM.
+- Connected Nous Research Hermes Agent to `http://127.0.0.1:8080/v1` and verified end-to-end autonomous bug diagnosis, patching, and verification.
 
 From here, you can extend this setup by:
 
 - **Running `llama-server` as a `systemd` service:** Create a user or system `systemd` unit so your local inference server starts automatically on boot and restarts cleanly if needed.
 - **Connecting local MCP servers to Hermes Agent:** Extend Hermes Agent's capabilities by attaching Model Context Protocol (MCP) servers for local Git repositories, databases, or documentation search.
-- **Experimenting with speculative decoding:** Test `llama.cpp` speculative decoding or draft/MTP heads to further accelerate token generation on memory-bandwidth-bound Arm64 CPUs.
+- **Experimenting with speculative decoding:** Test llama.cpp speculative decoding or draft and multi-token prediction (MTP) heads to further accelerate token generation on memory-bandwidth-bound Arm64 CPUs.
