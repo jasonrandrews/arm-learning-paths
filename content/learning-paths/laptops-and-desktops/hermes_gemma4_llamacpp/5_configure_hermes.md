@@ -1,6 +1,6 @@
 ---
 title: Install and configure Nous Research Hermes Agent
-description: Install Nous Research Hermes Agent on Arm64 Linux, point it at your local llama-server endpoint, and increase API timeouts for CPU inference.
+description: Install Nous Research Hermes Agent on NVIDIA DGX Spark, point it at your local llama-server endpoint, and configure API timeouts for multi-step local tool loops.
 weight: 6
 
 ### FIXED, DO NOT MODIFY
@@ -27,24 +27,15 @@ The output is similar to:
 └─────────────────────────────────────────────────────────┘
 
 ✓ prerequisites ok (git, curl)
-→ Updating /home/user/.hermes/hermes-agent to the latest stable release (v0.23.3)
+→ Installing the latest stable release (v0.23.4); --channel main follows every commit
+✓ dependencies installed
+✓ config prepared in /home/user/.hermes
 ✓ uv ready (uv 0.13.5 (aarch64-unknown-linux-gnu))
 ...
-✓ app products and hermes command ready
-
-┌─────────────────────────────────────────────────────────┐
-│             ☤ Hermes Agent Setup Wizard                │
-├─────────────────────────────────────────────────────────┤
-│  Let's configure your Hermes Agent installation.       │
-│  Press Ctrl+C at any time to exit.                     │
-└─────────────────────────────────────────────────────────┘
-
-
-  Setup cancelled. Remaining sections were not changed.
 ✓ Hermes Agent install complete. Run: hermes
 ```
 
-If the installer updates your shell `PATH`, reload your shell profile or open a new terminal, then verify the `hermes` CLI is available:
+If the installer updates your shell `PATH`, reload `~/.bashrc` (`source ~/.bashrc`) or open a new terminal, then verify the `hermes` Command-Line Interface (CLI) is available:
 
 ```bash
 hermes --version
@@ -53,7 +44,12 @@ hermes --version
 The output is similar to:
 
 ```output
-Hermes Agent v0.23.3 (2026.11.17)
+Hermes Agent v0.23.4 (2026.9.24) · stable · local 8fc037444731
+Install directory: /home/user/.hermes/hermes-agent
+Install method: git
+Python: 3.14.9
+OpenAI SDK: 2.54.0
+Up to date
 ```
 
 ## Point Hermes Agent to local llama-server
@@ -75,17 +71,20 @@ hermes config show
 The output is similar to:
 
 ```output
-  model:
-    default: ./models/gemma-4-E4B-it-Q4_0.gguf
-    provider: local
-    base_url: http://127.0.0.1:8080/v1
+┌─────────────────────────────────────────────────────────┐
+│              ☤ Hermes Configuration                    │
+└─────────────────────────────────────────────────────────┘
+...
+◆ Model
+  Model:        {'default': './models/gemma-4-E4B-it-Q4_0.gguf', 'provider': 'local', 'base_url': 'http://127.0.0.1:8080/v1'}
+  Max turns:    500
 ```
 
-## Increase the API timeout for local CPU inference
+## Increase the API timeout for local inference
 
-Autonomous tool-calling loops can send large prompts (thousands of tokens of file contents and tool outputs) to `llama-server`. On CPU-only inference, a single turn can take longer than default cloud-API HTTP timeouts.
+Autonomous tool-calling loops can send large prompts containing thousands of tokens of file contents and tool outputs to `llama-server`. Setting `HERMES_API_TIMEOUT=1800` (30 minutes) in `~/.hermes/.env` ensures long multi-turn requests don't time out prematurely, even if you later switch to larger models such as Gemma 4 31B or run CPU-only fallback.
 
-Set `HERMES_API_TIMEOUT=1800` (30 minutes) in `~/.hermes/.env` so multi-step local generations don't time out prematurely:
+Update `~/.hermes/.env`:
 
 ```bash
 mkdir -p ~/.hermes
@@ -97,7 +96,13 @@ grep -q '^HERMES_API_TIMEOUT=' ~/.hermes/.env 2>/dev/null \
 Confirm the setting in `~/.hermes/.env`:
 
 ```bash
-cat ~/.hermes/.env
+grep '^HERMES_API_TIMEOUT=' ~/.hermes/.env
+```
+
+The output is similar to:
+
+```output
+HERMES_API_TIMEOUT=1800
 ```
 
 ## Start an interactive session
@@ -108,10 +113,10 @@ After configuring `model.provider`, `model.base_url`, and `model.default`, you c
 hermes
 ```
 
-Hermes opens its interactive terminal UI connected directly to your local `llama-server` at `http://127.0.0.1:8080/v1` (or use `hermes chat --cli` for the classic line-based REPL). Type `/exit` or press **Ctrl+C** when you're finished.
+Hermes opens its interactive terminal user interface (UI) connected directly to your local `llama-server` at `http://127.0.0.1:8080/v1`. For a classic line-based interface, use `hermes chat --cli` instead. Type `/exit` or press **Ctrl+C** when you're finished.
 
 ## What you've accomplished and what's next
 
-You've installed Nous Research Hermes Agent, connected it to your local `llama-server` endpoint, and configured `HERMES_API_TIMEOUT` for long-running local CPU inference.
+You've installed Nous Research Hermes Agent on NVIDIA DGX Spark, connected it to your local `llama-server` endpoint, and configured `HERMES_API_TIMEOUT` for multi-step local inference.
 
 Next, you'll test autonomous multi-step tool calling on a local code-fixing task with Gemma 4 E4B.

@@ -1,6 +1,6 @@
 ---
 title: Validate autonomous tool-calling workflows
-description: Test Nous Research Hermes Agent on a local Python bug-fixing task with Gemma 4 E4B and observe tool-calling reliability, self-correction, and system memory usage.
+description: Test Nous Research Hermes Agent on NVIDIA DGX Spark with a local Python bug-fixing task powered by Gemma 4 E4B and measure completion time and GB10 memory usage.
 weight: 7
 
 ### FIXED, DO NOT MODIFY
@@ -9,14 +9,14 @@ layout: learningpathall
 
 ## Create a local test workspace
 
-Create a small sandbox directory containing a Python script with a deliberate bug so you can evaluate Hermes Agent's end-to-end tool-calling loop in a repeatable way:
+Create a small test directory containing a Python script with two deliberate bugs so you can evaluate Hermes Agent's end-to-end tool-calling loop in a repeatable way:
 
 ```bash
 mkdir -p ~/hermes-test-workspace
 cd ~/hermes-test-workspace
 ```
 
-Create `metrics_parser.py` with an intentional off-by-one and key-name bug:
+Create `metrics_parser.py` with an intentional off-by-one divisor bug and a mismatched dictionary key name:
 
 ```bash
 cat <<'EOF' > ~/hermes-test-workspace/metrics_parser.py
@@ -35,7 +35,7 @@ if __name__ == "__main__":
 EOF
 ```
 
-Running it directly reveals both bugs (`KeyError: 'latency'` and a division by `len(records) - 1` that fails on single-item lists and skews averages):
+Running it directly reveals the `KeyError: 'latency'` failure, alongside the division by `len(records) - 1` that skews averages and fails on single-item lists:
 
 ```bash
 python3 metrics_parser.py
@@ -66,90 +66,91 @@ hermes chat --cli -q "Inspect the current directory, read metrics_parser.py, dia
 ```
 
 {{% notice Note %}}
-On the first turn of a new session, Hermes Agent sends an ~11K-token system prompt and tool schemas, which takes ~1–1.5 minutes to prefill on CPU with Gemma 4 E4B. Subsequent tool-calling turns and follow-up prompts reuse the `llama-server` KV cache and complete quickly.
+On the first turn of a new session, Hermes Agent sends an ~11K-token system prompt and tool schemas. With Blackwell GB10 GPU offloading active (`~7,460 tok/s` prefill with `q8_0` KV cache), cold prefill finishes in ~2–3 seconds, and subsequent tool calls reuse the `llama-server` KV cache.
 {{% /notice %}}
 
 Observe how the agent runs the full tool loop:
 
-1. Finds and reads `metrics_parser.py`.
-2. Patches the `len(records) - 1` divisor bug and runs `python3 metrics_parser.py`.
-3. Sees the `KeyError: 'latency'` failure, self-corrects `r["latency"]` to `r["latency_ms"]`, and re-runs `python3 metrics_parser.py`.
-4. Confirms the verified `Average latency: 30.00 ms` output.
+1. Lists the workspace files and reads `metrics_parser.py`
+2. Diagnoses both the `r["latency"]` key mismatch and the `len(records) - 1` divisor bug
+3. Patches both lines in `metrics_parser.py`
+4. Runs `python3 metrics_parser.py` and confirms `Average latency: 30.00 ms`
 
 The output is similar to:
 
 ```output
 Query: Inspect the current directory, read metrics_parser.py, diagnose any bugs,
 fix metrics_parser.py, and run python3 metrics_parser.py to verify the output.
-🔎 Find metrics_parser.py  0.4s
+...
+💻 $ ls -R  0.2s
 📖 Read metrics_parser.py
+...
 🔧 Patch metrics_parser.py
 │ metrics_parser.py
-│ @@ -2,7 +2,7 @@
-│      if not records:
-│          return 0.0
-│      total = sum(r["latency"] for r in records)
-│ -    return total / (len(records) - 1)
-│ +    return total / len(records)
-│
-✗ $ python3 metrics_parser.py  0.2s [exit 1]
-🔧 Patch metrics_parser.py
-│ metrics_parser.py
-│ @@ -1,7 +1,7 @@
+│ @@ -1,8 +1,8 @@
 │  def average_latency(records):
 │      if not records:
 │          return 0.0
 │ -    total = sum(r["latency"] for r in records)
+│ -    return total / (len(records) - 1)
 │ +    total = sum(r["latency_ms"] for r in records)
-│      return total / len(records)
+│ +    return total / len(records)
 │
-💻 $ python3 metrics_parser.py  0.2s
+│  if __name__ == "__main__":
+│      sample = [
+💻 $ python3 metrics_parser.py
 
 ────────────────────────────────────────
 ☤ Hermes
-The following actions were taken:
-1. Inspected Directory: Verified metrics_parser.py exists.
-2. Diagnosed Bugs: Replaced (len(records) - 1) with len(records) and updated "latency" to "latency_ms".
-3. Verification: Executed python3 metrics_parser.py -> Average latency: 30.00 ms.
+The directory inspection showed only metrics_parser.py. Analysis of the file identified two bugs:
+1. KeyError: The function accessed r["latency"], but the sample data provided r["latency_ms"].
+2. Incorrect average calculation: The function divided by len(records) - 1 instead of len(records).
+The function was updated to use the correct key and calculate the mean correctly.
+Execution of python3 metrics_parser.py returned: Average latency: 30.00 ms
 ────────────────────────────────────────
 
-Session:        local-d7a3527370a0b248161eae52ba68c33f6aaff9686396dc296d81293d718af3ee
-Duration:       4m 2s
-Messages:       14 (1 user, 12 tool calls)
+Session:        local-648f77d8b520533c510593b1ed77bdcfcbace6d9928a63ce0364b817b58e55f9
+Duration:       38s
+Messages:       10 (1 user, 8 tool calls)
 ```
 
-## Monitor system resources during execution
+## Monitor system resources while running
 
-In a separate terminal while `llama-server` and Hermes Agent are running, check system memory usage:
+In a separate terminal while `llama-server` is running, inspect its resident set size (RSS), GB10 GPU memory allocation, and overall unified memory usage:
 
 ```bash
+ps -o pid=,rss=,comm= -p $(pgrep -n llama-server) | awk '{printf "PID=%s RSS=%.2f GiB CMD=%s\n", $1, $2/1048576, $3}'
+nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv
 free -h
 ```
 
-With Gemma 4 E4B, the 64K context window, and `q8_0` KV cache active, total system RAM usage is typically around 12 GiB (0 B swap), fitting comfortably on Arm64 systems with 16 GB or more of RAM.
+The output is similar to:
+
+```output
+PID=1223023 RSS=3.03 GiB CMD=llama-server
+pid, process_name, used_gpu_memory [MiB]
+1223023, ./build/bin/llama-server, 4088 MiB
+```
+
+With Gemma 4 E4B, the 64K context window, and `q8_0` KV cache active, `llama-server` uses ~4,088 MiB (~4.0 GiB) of GB10 unified GPU memory (`3.03 GiB` process RSS), leaving over 115 GB available on a dedicated 128 GB NVIDIA DGX Spark.
 
 ## Summary of observed agentic performance
 
-The following table summarizes the observed run for Gemma 4 E4B on the debugging task:
+The following table summarizes the observed run for Gemma 4 E4B on NVIDIA DGX Spark (Grace Blackwell GB10, 128 GB unified memory, CUDA `sm_121a` offload):
 
-| Metric | Gemma 4 E4B (`Q4_0`) |
+| Metric | Gemma 4 E4B (`Q4_0`, GB10 CUDA) |
 |---|---|
-| Tool-call format reliability | Clean tool calls (`Find`, `Read`, `Patch`, `Terminal`) |
-| Self-correction loop | Detected `KeyError` after first patch and fixed both bugs |
-| Total wall-clock completion time | 4m 2s (cold prefill + 12 tool calls across 14 messages) |
-| Total system RAM used (`free -h`) | ~12 GiB (0 B swap) |
+| Tool-call format reliability | Clean tool calls (`terminal`, `read_file`, `patch`) |
+| Diagnosis and fix accuracy | Identified and patched both bugs cleanly before verification |
+| Total wall-clock completion time | 38s (cold ~11K-token prefill + 8 tool calls across 10 messages) |
+| `llama-server` memory usage | ~3.03 GiB RSS / `4,088 MiB` GPU memory in `nvidia-smi` |
 
-## What you've accomplished and where to go next
+## What you've accomplished and what's next
 
-You built a completely local autonomous AI agent stack on Arm64 Linux without relying on cloud APIs:
-
-- Compiled llama.cpp from source for Arm64 (`-DGGML_NATIVE=ON -DGGML_OPENMP=ON -DGGML_CPU_KLEIDIAI=ON`).
-- Downloaded Gemma 4 E4B from Hugging Face and benchmarked its prompt-processing and token-generation speed on Arm64.
-- Served Gemma 4 E4B with a 64K context window, Flash Attention, `q8_0` KV cache, and `--jinja` tool-calling templates in about 12 GiB of total system RAM.
-- Connected Nous Research Hermes Agent to `http://127.0.0.1:8080/v1` and verified end-to-end autonomous bug diagnosis, patching, and verification.
+You compiled llama.cpp from source with CUDA 13 Blackwell (`sm_121a`), Armv9.2 Grace CPU flags, and Arm KleidiAI, downloaded Gemma 4 E4B, 26B-A4B MoE, and 31B from Hugging Face, served Gemma 4 E4B with full GB10 GPU offload and a 64K `q8_0` KV cache context window, and connected Nous Research Hermes Agent to verify end-to-end autonomous bug diagnosis, patching, and verification.
 
 From here, you can extend this setup by:
 
-- **Running `llama-server` as a `systemd` service:** Create a user or system `systemd` unit so your local inference server starts automatically on boot and restarts cleanly if needed.
-- **Connecting local MCP servers to Hermes Agent:** Extend Hermes Agent's capabilities by attaching Model Context Protocol (MCP) servers for local Git repositories, databases, or documentation search.
-- **Experimenting with speculative decoding:** Test llama.cpp speculative decoding or draft and multi-token prediction (MTP) heads to further accelerate token generation on memory-bandwidth-bound Arm64 CPUs.
+- Switching Hermes Agent to Gemma 4 26B-A4B (MoE): Restart `llama-server` with `-m ./models/gemma-4-26B-A4B-it-Q4_0.gguf` and run `hermes config set model.default ./models/gemma-4-26B-A4B-it-Q4_0.gguf` to gain higher reasoning capacity at 61.72 tok/s GPU decode speed.
+- Running `llama-server` as a `systemd` service: Create a user or system `systemd` unit so your local inference server starts automatically on boot and restarts cleanly if needed.
+- Connecting local MCP servers to Hermes Agent: Extend Hermes Agent's capabilities by attaching Model Context Protocol (MCP) servers for local Git repositories, databases, or documentation search.

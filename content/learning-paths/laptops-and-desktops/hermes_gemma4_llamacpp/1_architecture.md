@@ -1,6 +1,6 @@
 ---
-title: Explore the local agent architecture on Arm64
-description: Understand the local architecture and memory budget for running Nous Research Hermes Agent with llama.cpp and Gemma 4 E4B on an Arm64 Linux system.
+title: Explore the local agent architecture on DGX Spark
+description: Understand the local architecture and unified memory budget for running Nous Research Hermes Agent with llama.cpp, CUDA, and Gemma 4 E4B on NVIDIA DGX Spark.
 weight: 2
 
 ### FIXED, DO NOT MODIFY
@@ -9,13 +9,13 @@ layout: learningpathall
 
 ## Local autonomous agent capabilities
 
-You'll build a fully local autonomous coding and workspace agent on an Arm64 Linux system. Instead of relying on cloud APIs, you'll run Gemma 4 E4B using a llama.cpp server compiled from source and connect Nous Research Hermes Agent to it for fast, practical tasks such as inspecting workspaces, diagnosing and fixing code or syntax errors, and running verification commands.
+Build a fully local autonomous coding and workspace agent on an NVIDIA DGX Spark system without cloud Application Programming Interfaces (APIs). Compile llama.cpp from source with Blackwell CUDA acceleration and Armv9.2 KleidiAI CPU support, benchmark three Gemma 4 variants (E4B, 26B-A4B Mixture of Experts, and 31B dense) across the Blackwell GPU and Grace CPU, then connect Nous Research Hermes Agent to inspect workspaces, diagnose and fix code errors, and run verification commands.
 
-Autonomous agents place different demands on local inference than simple chat sessions. Each user request can trigger multiple back-and-forth tool calls (such as listing directories, reading files, editing code, and running verification commands) that need:
+Autonomous agents place different demands on local inference than simple chat sessions. Each user request can trigger multiple back-and-forth tool calls, such as listing directories, reading files, editing code, and running verification commands, that need:
 
-- Large context windows: Hermes Agent needs at least a 64K context window to hold system prompts, tool schemas, file contents, and multi-step conversation history.
-- Fast prompt prefill: Hermes Agent sends an ~11K-token system prompt and tool schema on the first turn of a session, making a compact model such as Gemma 4 E4B responsive on CPU-only hardware.
-- Predictable memory usage: Using Gemma 4 E4B with a quantized 64K KV cache keeps total system RAM usage around 12 GiB, leaving plenty of headroom even on 16 GB–32 GB Arm64 systems.
+- **Large context windows**: Hermes Agent needs at least a 64K context window to hold system prompts, tool schemas, file contents, and multi-step conversation history.
+- **Fast prompt prefill**: Hermes Agent sends an ~11K-token system prompt and tool schema on the first turn of a session, making Blackwell GPU acceleration essential for multi-thousand-token-per-second prefill and sub-minute end-to-end tool loops.
+- **Unified memory headroom**: DGX Spark pairs a 20-core Armv9.2 Grace CPU (10 Cortex-X925 performance cores and 10 Cortex-A725 efficiency cores) with an NVIDIA GB10 Blackwell GPU over 128 GB of coherent unified LPDDR5X memory. That pool fits Gemma 4 E4B with a 64K quantized Key-Value (KV) cache in ~4 GB while leaving room to benchmark larger 26B and 31B models.
 
 ## System architecture
 
@@ -29,7 +29,7 @@ The runtime consists of two local processes communicating over loopback HTTP:
                                     v
 +-----------------------------------------------------------------------+
 |                   Nous Research Hermes Agent                          |
-|  - Autonomous planning & multi-step tool loop                         |
+|  - Autonomous planning and multi-step tool loop                       |
 |  - Built-in tools: shell, filesystem, skills                          |
 +-----------------------------------+-----------------------------------+
                                     |
@@ -38,33 +38,33 @@ The runtime consists of two local processes communicating over loopback HTTP:
                                     v
 +-----------------------------------------------------------------------+
 |                    llama-server (llama.cpp)                           |
-|  - Arm64 CPU build (-DGGML_NATIVE=ON -DGGML_OPENMP=ON)                |
-|  - 64K context (-c 65536), Flash Attention, q8_0 KV cache             |
+|  - CUDA Blackwell offload (-ngl 99, sm_121a) + Armv9.2 KleidiAI CPU   |
+|  - 64K context (-c 65536), Flash Attention (-fa on), q8_0 KV cache    |
 +-----------------------------------+-----------------------------------+
                                     |
                                     v
 +-----------------------------------------------------------------------+
-|                       System RAM (16 GB or more)                      |
-|  - Gemma 4 E4B GGUF weights (~4.3 GB)                                 |
-|  - 64K quantized KV cache (q8_0)                                      |
+|               NVIDIA GB10 Unified Memory (128 GB LPDDR5X)             |
+|  - Gemma 4 E4B GGUF weights (~4.3 GB on disk)                         |
+|  - 64K quantized KV cache (q8_0) + CUDA buffers shared with GB10 GPU  |
 +-----------------------------------------------------------------------+
 ```
 
-Because `llama-server` exposes an OpenAI-compatible `/v1` API, Hermes Agent doesn't need to know how or where the model runs. You can adjust CPU thread counts or server settings without changing your agent workflow.
+The Grace CPU and Blackwell GB10 GPU share a unified physical memory space without PCIe copies, so offloading all layers with `-ngl 99` lets CUDA kernels access model weights and the KV cache directly. Compiling the CPU backend with explicit Armv9.2 flags and Arm KleidiAI gives you an optimized Grace CPU path for side-by-side benchmarking and CPU fallback. The OpenAI-compatible `/v1` API exposed by `llama-server` means you can switch models or adjust GPU offloading without changing your Hermes Agent workflow.
 
 ## Memory budget with a 64K context window
 
-Fitting an agent model alongside a 64K context window in system RAM means sizing both the model weights and the KV cache. Using 4-bit quantized model weights (`Q4_0`) together with an 8-bit quantized KV cache (`q8_0`) and Flash Attention (`-fa on`) keeps memory growth compact while preserving long-context accuracy.
+Sizing a local agent for a 64K context window means accounting for both the model weights and the runtime KV cache and CUDA buffers. Using 4-bit quantized model weights (`Q4_0`) together with an 8-bit quantized KV cache (`q8_0`) and Flash Attention (`-fa on`) keeps memory usage compact while preserving long-context accuracy.
 
-| Component | Gemma 4 E4B | Notes |
+| Component | Gemma 4 E4B (`Q4_0`) | Notes |
 |---|---|---|
-| Model weights | ~4.3 GB | Loaded into system RAM |
-| 64K KV cache (`q8_0`) | ~2–3 GB | Scales with layer count and grouped-query attention (GQA) configuration |
-| OS, desktop, and Hermes Agent | ~4–5 GB | Leaves headroom for build tools and test tasks |
-| **Total estimated RAM** | **~11–13 GB** | Fits comfortably on 16 GB or larger Arm64 systems |
+| Model weights on disk | ~4.3 GB | Loaded into GB10 unified memory |
+| `llama-server` GPU and KV allocation (`q8_0`, 64K) | ~4.0 GB | Observed `4,088 MiB` in `nvidia-smi` (`~3.03 GiB` RSS) after multi-turn tool calls |
+| Ubuntu OS, desktop, and Hermes Agent | ~4–6 GB | Varies with desktop sessions and other local services |
+| **Total estimated unified memory** | **~8–10 GB** | Leaves over 115 GB free on a dedicated 128 GB DGX Spark |
 
 ## What you've learned and what's next
 
-You've reviewed the local agent architecture and the memory budget for running Gemma 4 E4B with a 64K context window on Arm64 Linux.
+You've reviewed the local agent architecture, the Grace Blackwell GB10 unified memory data path, and the 64K context memory budget for running Gemma 4 E4B with llama.cpp on NVIDIA DGX Spark.
 
-Next, you'll verify your Arm64 Linux environment and compile llama.cpp from source.
+Next, you'll verify your DGX Spark environment and compile llama.cpp from source with Blackwell CUDA and Armv9.2 KleidiAI optimizations.
